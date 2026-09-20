@@ -1,0 +1,8 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+int main(int argc, char * argv[]) {
+  if (argv[1] == "0") {
+    printf("You gave me zero!")
+  }
+}

@@ -1,0 +1,8 @@
+root           1       0  0 Aug31 ?        00:00:09 /run/current-system/systemd/lib/systemd/systemd --switched-root --system --deserialize=41
+root         463       1  0 Aug31 ?        00:00:02 /nix/store/0xiinbh7pbj479i5v28mqnjrvhvbdibf-systemd-260.2/lib/systemd/systemd-journald
+systemd+     465       1  0 Aug31 ?        00:00:01 /nix/store/0xiinbh7pbj479i5v28mqnjrvhvbdibf-systemd-260.2/lib/systemd/systemd-oomd
+systemd+     501       1  0 Aug31 ?        00:00:00 /nix/store/0xiinbh7pbj479i5v28mqnjrvhvbdibf-systemd-260.2/lib/systemd/systemd-timesyncd
+root         506       1  0 Aug31 ?        00:00:15 /nix/store/0xiinbh7pbj479i5v28mqnjrvhvbdibf-systemd-260.2/lib/systemd/systemd-udevd
+root        1002       1  0 Aug31 ?        00:00:04 /nix/store/0xiinbh7pbj479i5v28mqnjrvhvbdibf-systemd-260.2/lib/systemd/systemd-logind
+michael+    1999       1  0 Aug31 ?        00:00:02 /run/current-system/systemd/lib/systemd/systemd --user --deserialize=40
+michael+   81579   81105  0 14:11 pts/1    00:00:00 /nix/store/sacz532zgiacvg7mva9v6gbfmyw427i3-gnugrep-3.12/bin/grep --color=auto systemd
