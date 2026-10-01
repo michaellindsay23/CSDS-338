@@ -23,6 +23,6 @@
   than threads causes more context switches to be needed to continue executing 
   in parallel.
   When using the getTransactionFromFile method, more threads always causes a
-  degration in performance. This is because filesystems utilitze locking to
+  degradation in performance. This is because filesystems utilize locking to
   maintain thread safety, meaning each thread must wait for the lock to be
   released to access the information.
