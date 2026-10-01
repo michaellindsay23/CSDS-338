@@ -1,0 +1,28 @@
+                          ____________________________________________________
+                         |            |            |            |             |
+                         | 1 Thread   | 2 Threads  | 4 Threads  |  8 Threads  |
+ ________________________|____________|____________|____________|_____________|
+|                        |            |            |            |             |
+|     getTransaction     | 17.40 secs | 10.73 secs | 8.40 secs  | 24.59 secs  |
+|________________________|____________|____________|____________|_____________|
+|                        |            |            |            |             |
+| getTransactionFromFile | 19.85 secs | 51.20 secs | 92.81 secs | 271.32 secs |
+|________________________|____________|____________|____________|_____________|
+
+
+1. In what scenarios did threads improve performance and why?
+
+  Additional threads improved performance when using the getTransaction function 
+  up to 4 total threads. This is because the 4 cores available are all being
+  utilized to run one thread each.
+
+2. In what scenarios did threads have a negative impact on performance and why?   
+
+  At 8 total threads when using the getTransaction function, the performance was 
+  worse overall due to the limitation of the number of cores. Having fewer cores
+  than threads causes more context switches to be needed to continue executing 
+  in parallel.
+  When using the getTransactionFromFile method, more threads always causes a
+  degration in performance. This is because filesystems utilitze locking to
+  maintain thread safety, meaning each thread must wait for the lock to be
+  released to access the information.
