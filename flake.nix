@@ -13,7 +13,7 @@
       buildInputs = with pkgs; [
         pkg-config
         gcc
-        gdb
+        valgrind-light
       ];
     };
   };
