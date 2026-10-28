@@ -1,3 +1,4 @@
+#include <stddef.h>
 #include <stdio.h>
 #include <pthread.h>
 #include <stdio.h>
@@ -19,15 +20,20 @@ int job_list_max_size = 32;
 void addJob(int pid, char* name) {
   struct Job new_job = { .pid = pid, .name = name };
   job_list[job_list_size] = new_job; 
+  job_list_size++;
 }
 
 void remove_job(int pid) {
   struct Job* new_list = malloc(job_list_max_size * sizeof(struct Job));
+  for (int i = 0; i < job_list_max_size; i++) {
+    struct Job temp = { .pid = 0, .name = NULL };
+    new_list[i] = temp;
+  }
 
   int pos = 0;
   int has_skipped = 0;
   struct Job* current_job = &job_list[pos];
-  while (current_job != NULL) {
+  while (current_job->name != NULL) {
     if (current_job->pid != pid) {
       new_list[pos - has_skipped] = *current_job;
     } else {
@@ -37,6 +43,12 @@ void remove_job(int pid) {
     pos++;
     current_job = &job_list[pos];
   }
+
+  free(new_list);
+  
+  job_list = new_list;
+
+  job_list_size--;
 }
 
 // Utility
@@ -69,15 +81,13 @@ void execute(char** args) {
 
   int pid = fork();
 
-  addJob(pid, args[0]);
-
   if (pid == 0) {
     execve(args[0], args, env);
   } else {
+    addJob(pid, args[0]);
     waitpid(pid, NULL, WUNTRACED);
+    remove_job(pid);
   }
-
-  remove_job(pid);
 }
 
 void* execute_background(void* arg) {
@@ -90,6 +100,10 @@ void* execute_background(void* arg) {
 // Main loop
 int main() {
   job_list = malloc(job_list_max_size * sizeof(struct Job));
+  for (int i = 0; i < job_list_max_size; i++) {
+    struct Job temp = { .pid = 0, .name = NULL };
+    job_list[i] = temp;
+  }
 
   pthread_t thread_list[32];
   int num_threads = 0;
@@ -97,9 +111,8 @@ int main() {
   int buffersize = 64;
   char buffer[buffersize];
   char** args;
-  int status = 1;
 
-  while (status) {
+  while (1) {
     printf("fih ~ ");
     char* buf = fgets(buffer, buffersize, stdin);
     clean(buffer);
@@ -111,17 +124,19 @@ int main() {
     }
 
     if (strcmp(args[0], "jobs") == 0) {
+      if (job_list[0].name == NULL) {
+        continue;
+      }
+
       printf("PID\t\tProgram\n");
 
       int pos = 0;
-      struct Job* current_job = &job_list[pos];
-      while (current_job != NULL) {
-        int pid = current_job->pid;
-        char* name = current_job->name;
-        printf("%i\t\t%s", pid, name);
+      struct Job current_job = job_list[pos];
+      while (current_job.name != NULL) {
+        printf("%i\t\t%s\n", current_job.pid, current_job.name);
 
         pos++;
-        current_job = &job_list[pos];
+        current_job = job_list[pos];
       }
 
       continue;  
