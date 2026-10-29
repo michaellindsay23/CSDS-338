@@ -7,6 +7,10 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+/*
+ *  I worked with Devin Riehle
+ */
+
 // Manage Jobs
 struct Job {
   int pid;
@@ -17,8 +21,11 @@ struct Job* job_list;
 int job_list_size = 0;
 int job_list_max_size = 32;
 
-void addJob(int pid, char* name) {
-  struct Job new_job = { .pid = pid, .name = name };
+void addJob(int p, char* n) {
+  if (job_list_size >= job_list_max_size) {
+    return;
+  }
+  struct Job new_job = { .pid = p, .name = strdup(n) };
   job_list[job_list_size] = new_job; 
   job_list_size++;
 }
@@ -44,10 +51,14 @@ void remove_job(int pid) {
     current_job = &job_list[pos];
   }
 
-  free(new_list);
+  for (int i = 0; i < job_list_max_size; i++) {
+    if (job_list[i].name != NULL) {
+      free(job_list[i].name);
+    }
+  }
   
+  free(job_list);
   job_list = new_list;
-
   job_list_size--;
 }
 
@@ -57,22 +68,6 @@ void clean(char* buffer) {
     buffer++;
   }
   *buffer = '\0';
-}
-
-char** split_line(char* line, int buffersize) {
-  char** tokens = malloc(sizeof(char*) * buffersize);
-  char* token = strtok(line, " ");
-  int position = 0;
-
-  while(token != NULL) {
-    tokens[position] = token;
-    position++;
-    token = strtok(NULL, " ");
-  }
-
-  tokens[position] = NULL;
-
-  return tokens;
 }
 
 // Execution
@@ -88,12 +83,13 @@ void execute(char** args) {
     waitpid(pid, NULL, WUNTRACED);
     remove_job(pid);
   }
+    
+  free(args);
 }
 
 void* execute_background(void* arg) {
   char** args = arg;
   execute(args);
-  free(args);
   return NULL;
 }
 
@@ -105,40 +101,55 @@ int main() {
     job_list[i] = temp;
   }
 
-  pthread_t thread_list[32];
+  pthread_t thread_list[32] = { 0 };
   int num_threads = 0;
 
-  int buffersize = 64;
-  char buffer[buffersize];
-  char** args;
-
   while (1) {
+    // Take input 
+    int buffersize = 64;
+    char buffer[buffersize];
     printf("fih ~ ");
     char* buf = fgets(buffer, buffersize, stdin);
     clean(buffer);
 
-    args = split_line(buffer, buffersize);
+    // Split input
+    char** args = malloc(sizeof(char*) * buffersize);
+    char* token = strtok(buffer, " ");
+    int position = 0;
 
+    for (int i = 0; i < job_list_max_size; i++) {
+      printf("%s", job_list[i].name);
+    }
+
+    while(token != NULL) {
+      args[position] = token;
+      position++;
+      token = strtok(NULL, " ");
+    }
+
+    args[position] = NULL;
+
+    // Check for builtins
     if (strcmp(args[0], "exit") == 0) {
+      free(args);
       break;
     }
 
     if (strcmp(args[0], "jobs") == 0) {
       if (job_list[0].name == NULL) {
+        free(args);
         continue;
       }
 
       printf("PID\t\tProgram\n");
 
       int pos = 0;
-      struct Job current_job = job_list[pos];
-      while (current_job.name != NULL) {
-        printf("%i\t\t%s\n", current_job.pid, current_job.name);
-
+      while (job_list[pos].name != NULL) {
+        printf("%i\t\t%s\n", job_list[pos].pid, job_list[pos].name);
         pos++;
-        current_job = job_list[pos];
       }
 
+      free(args);
       continue;  
     } 
 
@@ -159,11 +170,19 @@ int main() {
     }
   }
 
-  for (int i = 0; i < num_threads; i++) {
-    pthread_join(thread_list[i], NULL);
+  int pos = 0;
+  while (thread_list[pos] != 0) {
+    pthread_join(thread_list[pos], NULL);
+    pos++;
   }
 
-  free(args);
+  // Free duplicated string values in names
+  for (int i = 0; i < job_list_max_size; i++) {
+    if (job_list[i].name != NULL) {
+      free(job_list[i].name);
+    }
+  }
+
   free(job_list);
 
   return 0;
